@@ -1,0 +1,8 @@
+model:
+  id: mlx-community/Qwen3-1.7B-4bit
+  source: https://huggingface.co/mlx-community/Qwen3-1.7B-4bit
+  purpose: 4-bit local base model for before-and-after QLoRA comparison
+runtime:
+  platform: Apple Silicon
+  library: mlx-lm
+  local_execution: base-model-plus-qlora-adapter

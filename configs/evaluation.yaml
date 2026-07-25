@@ -1,0 +1,9 @@
+evaluation:
+  test: data/test.jsonl
+  comparison: same-prompt-before-and-after-adapter
+  required_checks:
+    - required_sections
+    - evidence_supported_by_input
+    - missing_information_explicit
+    - no_diagnosis_or_treatment_advice
+    - human_review_note_present

@@ -1,0 +1,18 @@
+experiment:
+  name: eskd-note-standardizer-lora
+  seed: 42
+data:
+  train: data/train.jsonl
+  validation: data/valid.jsonl
+adapter:
+  method: QLoRA
+  rank: 8
+  alpha: 16
+training:
+  status: completed-initial-local-run
+  iterations: 250
+  batch_size: 1
+  num_layers: 8
+  trainable_parameters: 2490000
+  checkpoint_selection: validation-review
+  note: Tune run length only after the baseline and validation set are available.

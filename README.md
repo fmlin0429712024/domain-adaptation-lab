@@ -1,36 +1,86 @@
-# Domain Adaptation Lab
+# ESKD Nursing Note Standardizer
 
-A reference lab for deciding when prompting, retrieval-augmented generation (RAG), or supervised fine-tuning provides the most appropriate solution for a domain-specific task.
+This project shows how a small, general language model can be fine-tuned locally to turn short, inconsistent **synthetic** ESKD nursing and care-coordination notes into a clear handoff summary for a human reviewer.
 
-## Purpose
+## Use case: standardize nursing-note summaries
 
-The lab uses a synthetic longitudinal-care review case study to compare three approaches:
+Different notes may be brief, fragmented, and written in different styles. Given several notes about one synthetic case, the fine-tuned model produces four consistent sections:
 
-- **Prompting:** baseline behavior from a general-purpose model.
-- **RAG:** current, citable knowledge such as policies, procedures, and guidelines.
-- **Supervised fine-tuning:** stable domain language, approved review patterns, and structured output behavior.
+1. Documented observations
+2. Care or access items
+3. Information to confirm
+4. Human-review note
 
-The objective is not to claim clinical performance or autonomous decision-making. It is to establish a reproducible decision framework, a small synthetic experiment, and clear evaluation criteria.
+| Before fine-tuning | After fine-tuning |
+|---|---|
+| A small base model may be vague, unstructured, or miss the requested format. | The same model learns this project's summary format, terminology, and evidence boundary. |
 
-## Reference use case
+The model does not diagnose, recommend treatment, or replace a nurse, clinician, or reviewer.
 
-A reviewer receives longitudinal observations, approved risk signals, and summarized notes. The system produces a structured review brief that highlights evidence, identifies missing information, and requires human review for any decision.
+## Simplified architecture
 
-## Scope
+```mermaid
+flowchart LR
+    A[Synthetic nursing notes] --> B[Train / validation / test splits]
+    C[Qwen3 1.7B base model from Hugging Face] --> D[MLX LoRA fine-tuning on local Mac]
+    B --> D
+    D --> E[Small adapter file]
+    A --> F[Baseline test output]
+    C --> F
+    C --> G[Fine-tuned test output]
+    E --> G[Fine-tuned test output]
+    F --> H[Before / after comparison]
+    G --> H
+    H --> I[Human reviewer]
 
-- Synthetic data only
-- Small-model SFT experiment with a held-out evaluation set
-- RAG baseline using versioned reference documents
-- Base-model, RAG, and SFT comparison
-- Structured outputs, evidence grounding, abstention, and human-review criteria
+```
 
-## Out of scope
+## How it runs locally
 
-- Real patient or client data
-- Autonomous clinical decisions or recommendations
-- Production deployment or clinical-performance claims
-- GraphRAG and complex agent orchestration
+- **Base model:** [`mlx-community/Qwen3-1.7B-4bit`](https://huggingface.co/mlx-community/Qwen3-1.7B-4bit), a 4-bit MLX version of the Qwen3 1.7B base model, downloaded from Hugging Face.
+- **Fine-tuning framework:** [MLX LM](https://github.com/ml-explore/mlx-lm), using a QLoRA adapter on Apple Silicon. The base-model weights are not rewritten.
+- **Inference:** MLX LM loads the base model and the trained adapter, then runs the held-out test examples.
+- **Deployment:** none in the first phase. This is a local, reproducible demonstration—not a hosted application.
+- **Ollama:** not part of this project. It is unnecessary for training or evaluation.
 
-## Documentation
+## Data and comparison
 
-- [Project brief](docs/project-brief.md)
+All data is invented for this repository. The dataset uses three separate files:
+
+| File | Purpose |
+|---|---|
+| `data/train.jsonl` | Examples used to train the LoRA adapter. |
+| `data/valid.jsonl` | Examples used to check training choices. |
+| `data/test.jsonl` | Held-out examples used only for the final before/after comparison. |
+
+The current set contains 36 training, 8 validation, and 12 held-out test examples. Test notes use different wording from training notes and never appear in the training split.
+
+## First local run
+
+The first QLoRA run used 36 synthetic training examples and the 12 held-out test examples. It trained only 2.49 million adapter parameters (about 0.145% of the 1.72B-parameter model) on this laptop.
+
+| Check on held-out examples | Base model | Fine-tuned model |
+|---|---:|---:|
+| Average required sections present (out of 4) | 0.0 | 4.0 |
+| Outputs that spent text on non-empty reasoning before the answer | 11 / 12 | 0 / 12 |
+
+This is a format-and-task demonstration on small synthetic data, not a measurement of clinical performance.
+
+## Project structure
+
+```text
+data/                 synthetic train, validation, and test examples
+configs/              selected model, training, and evaluation settings
+scripts/              generate data, run the baseline, train, and compare outputs
+outputs/              saved baseline, fine-tuned, and comparison results (created when run)
+README.md             project story and local-run design
+```
+
+## What the final demonstration will show
+
+For the same held-out synthetic notes, the repository will show the raw base-model output beside the fine-tuned output and check:
+
+- Were all four summary sections produced?
+- Are statements supported by the notes?
+- Are missing or conflicting details clearly identified?
+- Did the model avoid adding diagnosis or treatment advice?

@@ -1,0 +1,11 @@
+[project]
+name = "eskd-nursing-note-standardizer"
+version = "0.1.0"
+description = "Local QLoRA fine-tuning demonstration using synthetic ESKD nursing notes"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+  "mlx-lm[train]",
+]
+
+[tool.uv]
+package = false
