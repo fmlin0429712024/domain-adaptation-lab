@@ -66,6 +66,129 @@ The first QLoRA run used 36 synthetic training examples and the 12 held-out test
 
 This is a format-and-task demonstration on small synthetic data, not a measurement of clinical performance.
 
+## Same notes, before and after fine-tuning
+
+The examples below use the same test notes and the same prompt. The only change is whether the QLoRA adapter is loaded. Baseline output is shown as generated and truncated at the 256-token limit.
+
+<details>
+<summary><strong>Example 1 — unclear visit location</strong></summary>
+
+**Synthetic notes**
+
+```text
+The patient said they did not know which site to go to.
+Staff sent a message with the visit location.
+There is no record that the location message was acknowledged.
+```
+
+**Before fine-tuning**
+
+```text
+<think>
+Okay, let me try to figure out how to approach this. The user wants a
+concise ESKD care handoff with specific headings ... First, I need to look
+at the provided information ...
+[generation ended before a handoff was produced]
+```
+
+**After fine-tuning**
+
+```text
+Documented observations
+- The patient stated they were not informed which site to visit.
+- A location visit message was sent, but no acknowledgment of receipt was documented.
+
+Care or access items
+- Attendance of the visit is pending because receipt of the location message was not confirmed.
+
+Information to confirm
+- Confirm that the location visit was received and acknowledged.
+
+Human-review note
+- Please follow up on location visit acknowledgment.
+```
+
+</details>
+
+<details>
+<summary><strong>Example 2 — appointment change request</strong></summary>
+
+**Synthetic notes**
+
+```text
+The patient requested a different appointment time.
+Scheduling received the request, but the replacement time was not recorded.
+The record does not show a response from scheduling.
+```
+
+**Before fine-tuning**
+
+```text
+<think>
+Okay, let me try to figure out how to approach this ... For Care or access
+items, maybe there is a need for a replacement time, but the record does not
+have it ...
+[generation ended before a handoff was produced]
+```
+
+**After fine-tuning**
+
+```text
+Documented observations
+- The patient requested a different appointment time.
+- A replacement time was not recorded.
+
+Care or access items
+- Scheduling received the request.
+
+Information to confirm
+- Confirm the updated appointment time and whether it was communicated to the patient.
+
+Human-review note
+- Please review the unresolved scheduling request.
+```
+
+</details>
+
+<details>
+<summary><strong>Example 3 — interpreter request</strong></summary>
+
+**Synthetic notes**
+
+```text
+The patient requested language interpretation for the next appointment.
+A request for an interpreter was entered.
+The record does not confirm that an interpreter is available.
+```
+
+**Before fine-tuning**
+
+```text
+<think>
+Okay, the user wants a concise ESKD care handoff with specific headings ...
+Let me start by breaking down each section ...
+[generation ended before a handoff was produced]
+```
+
+**After fine-tuning**
+
+```text
+Documented observations
+- The patient requested language interpretation for the next appointment.
+- A request for an interpreter was entered.
+
+Care or access items
+- The record does not confirm that an interpreter is available.
+
+Information to confirm
+- Confirm interpreter availability and communicate the result before the next appointment.
+
+Human-review note
+- Please review and resolve the pending interpreter request.
+```
+
+</details>
+
 ## Project structure
 
 ```text
