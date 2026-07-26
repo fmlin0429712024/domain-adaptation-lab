@@ -199,6 +199,10 @@ outputs/              saved baseline, fine-tuned, and comparison results (create
 README.md             project story and local-run design
 ```
 
+## Next reference
+
+- [Fine-tuning MLOps and advanced scope reference](fine-tuning-advanced-reference.md) — the concrete promotion path for this QLoRA lab, plus the boundary between this method and other fine-tuning types.
+
 ## What the final demonstration will show
 
 For the same held-out synthetic notes, the repository will show the raw base-model output beside the fine-tuned output and check:
