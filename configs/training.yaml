@@ -1,13 +1,13 @@
 experiment:
   name: eskd-note-standardizer-lora
-  seed: 42
+  seed: 0
 data:
   train: data/train.jsonl
   validation: data/valid.jsonl
 adapter:
   method: QLoRA
   rank: 8
-  alpha: 16
+  scale: 20.0
 training:
   status: completed-initial-local-run
   iterations: 250

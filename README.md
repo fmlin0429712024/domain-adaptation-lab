@@ -203,11 +203,17 @@ README.md             project story and local-run design
 
 - [Fine-tuning MLOps and advanced scope reference](fine-tuning-advanced-reference.md) — the nine-step QLoRA promotion path, the MLOps/LLMOps/AgenticOps operating model, and the boundary between this method and other fine-tuning types.
 
-## What the final demonstration will show
+## What the demonstration shows — and how each check is done
 
-For the same held-out synthetic notes, the repository will show the raw base-model output beside the fine-tuned output and check:
+For the same held-out synthetic notes, the repository shows the raw base-model output beside the fine-tuned output.
 
+**Automated** (`scripts/compare_outputs.py`, summarized in `outputs/comparison.json`):
 - Were all four summary sections produced?
+- Did the model avoid leaking `<think>` reasoning into the final answer?
+
+**Manually reviewed** on the three examples above — not yet scored by code:
 - Are statements supported by the notes?
 - Are missing or conflicting details clearly identified?
 - Did the model avoid adding diagnosis or treatment advice?
+
+`configs/evaluation.yaml` lists all five checks as the target evaluation surface. Closing the gap between the two automated checks and the three manually-reviewed ones — for example with an LLM-judge rubric — is the natural next step before this method could support a promotion gate.
