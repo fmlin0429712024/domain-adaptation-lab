@@ -31,17 +31,6 @@ flowchart LR
 
 The API consumer calls one approved endpoint. It does not need to know whether the service internally uses a base model, an adapter, or a merged model file.
 
-| Step | Concrete object in this project | Why MLOps cares |
-|---|---|---|
-| 1. Freeze the input | `data/train.jsonl`, `valid.jsonl`, and `test.jsonl` | A later result must be traceable to the exact data split used. |
-| 2. Freeze the recipe | Base-model ID, QLoRA settings, training script, and random seed | The training run must be reproducible. |
-| 3. Train | Local QLoRA job today; hosted custom training job later | Produces an adapter artifact, not a clinical claim. |
-| 4. Evaluate | Same held-out notes before and after fine-tuning | Checks format, evidence support, missing-information handling, and unsafe additions. |
-| 5. Promote or reject | Human review of results against stated thresholds | Prevents “a training run completed” from becoming “a model is approved.” |
-| 6. Register the version | `eskd-handoff:v1 = base-model + adapter-v1 + evaluation record` | Makes the approved combination identifiable and reversible. |
-| 7. Serve | One `/summarize` API loads the approved version | Clients use one stable interface. |
-| 8. Monitor and roll back | Capture failures and retain the prior approved version | A poor new version can be withdrawn without changing client integrations. |
-
 ### The deployment mental model
 
 ```text
@@ -146,45 +135,25 @@ The flywheel means collecting evidence from real use, reviewing it, and improvin
 
 For a traditional enterprise workflow, AgenticOps and LLMOps may be the primary focus because the business process, tools, approval path, and prompts change most often. For an AI product with repeated domain behavior, MLOps becomes more central when new approved data justifies a new model or adapter version. The same product may need all three, but each change should be evaluated and promoted through the lifecycle that matches the asset being changed.
 
-## Interview explanation
+> **Interview explanation:** I view MLOps, LLMOps, and AgenticOps as connected operational lifecycles rather than separate technologies. MLOps governs changes to data and model artifacts; LLMOps governs model calls and prompts; AgenticOps governs the workflow, skills, and tool controls. Feedback from production should be triaged to the right layer. In this lab, the central artifact is a QLoRA adapter, so the detailed lifecycle is MLOps: versioned data, training configuration, evaluation, registration, approval, serving, monitoring, and rollback.
 
-> I view MLOps, LLMOps, and AgenticOps as connected operational lifecycles rather than separate technologies. MLOps governs changes to data and model artifacts; LLMOps governs model calls and prompts; AgenticOps governs the workflow, skills, and tool controls. Feedback from production should be triaged to the right layer. In this lab, the central artifact is a QLoRA adapter, so the detailed lifecycle is MLOps: versioned data, training configuration, evaluation, registration, approval, serving, monitoring, and rollback.
+## Scope: what this lab does and does not claim
 
-## Fine-tuning map: current lab versus future learning
+The point is not to claim every form of fine-tuning or every production capability. The point is to be able to explain which method fits the task, what artifact it produces, how it is evaluated, how it is governed after training — and to be precise about what is adjacent but distinct.
 
-| Fine-tuning style | What changes | Current status | Appropriate next step |
+| Topic | What it is | Status in this lab | Why distinct / next step |
 |---|---|---|---|
 | **QLoRA / LoRA** | A small adapter is trained while base weights remain frozen. | **Completed in this lab.** | Extend with hosted MLOps promotion controls. |
-| **Full fine-tuning** | Some or all base-model weights are updated. | Not implemented. | Learn conceptually; use only when adapter tuning cannot meet a justified need. |
 | **Instruction fine-tuning** | Examples teach a desired task or response style. | This is the task style used by the ESKD lab. | Continue improving synthetic-data diversity and evaluation. |
-| **Embedding fine-tuning** | An embedding/retrieval model learns query-to-document relevance. | Not implemented; separate problem type. | Build a separate retrieval-focused lab later, with retrieval metrics. |
-| **Continued pre-training / foundation-model training** | General model weights learn from a huge corpus. | Not implemented and out of scope. | Understand the category and vendor-selection implications. |
-
-The point is not to claim every form of fine-tuning. The point is to be able to explain which method fits the task, what artifact it produces, how it is evaluated, and how it is governed after training.
-
-## What it does not claim—and why that is correct
-
-The remaining topics are adjacent but distinct production capabilities. They should not be claimed merely because this small local SFT lab exists.
-
-| Advanced topic | What it is | Why it is different from this lab |
-|---|---|---|
-| **Embedding fine-tuning** | Train a retriever/embedding model so relevant documents rank nearer to a query. | It improves retrieval quality, not the response format or behavior of a generative model. |
-| **Large-scale foundation-model training** | Train or continue pre-train a model over a very large corpus and compute cluster. | This requires massive datasets, distributed training, safety research, and substantial compute; it is usually a model-provider responsibility. |
-| **Real clinical-data validation** | Validate a clinical use case with approved data, clinical experts, protocol, governance, and safety monitoring. | Synthetic before/after output cannot establish clinical quality, safety, or workflow effectiveness. |
-| **Hosted MLOps fine-tuning pipeline** | Reproducible cloud training, evaluation gates, registry, deployment, monitoring, and rollback. | The current lab runs locally and intentionally has no deployment or managed-model lifecycle. |
-
-## The right mental model
-
-```mermaid
-flowchart TB
-    A[Current lab<br/>Small generative model + QLoRA] --> B[Behavior / format adaptation]
-    C[Embedding fine-tuning] --> D[Retrieval relevance]
-    E[Hosted MLOps pipeline] --> F[Reproducible promotion + operations]
-    G[Real clinical validation] --> H[Clinical safety + usefulness evidence]
-    I[Large-scale model training] --> J[Foundation-model capability]
-```
+| **Full fine-tuning** | Some or all base-model weights are updated. | Not implemented. | Learn conceptually; use only when adapter tuning cannot meet a justified need. |
+| **Embedding fine-tuning** | Train a retriever/embedding model so relevant documents rank nearer to a query. | Not implemented; a separate problem type. | Improves retrieval quality, not response format — build a separate retrieval-focused lab, with retrieval metrics. |
+| **Continued pre-training / foundation-model training** | General model weights learn from a huge corpus, at large-scale compute. | Not implemented and out of scope. | Usually a model-provider responsibility; understand the category and vendor-selection implications. |
+| **Real clinical-data validation** | Validate a clinical use case with approved data, clinical experts, protocol, and safety monitoring. | Not implemented. | Synthetic before/after output cannot establish clinical quality, safety, or workflow effectiveness. |
+| **Hosted MLOps fine-tuning pipeline** | Reproducible cloud training, evaluation gates, registry, deployment, monitoring, and rollback. | Not implemented. | This lab runs locally with no deployment or managed-model lifecycle — see the learning order below. |
 
 These are complementary layers, not a single maturity ladder. A strong enterprise system may use several of them, but does not need all of them.
+
+> **Interview explanation:** This lab proves the local SFT foundation: curated splits, QLoRA adaptation, and held-out before/after evaluation on a narrow synthetic task. I distinguish that from embedding fine-tuning for retrieval, from managed MLOps for governed promotion, and from clinical validation, which needs approved real-world data and expert review. I do not collapse those claims into one.
 
 ## Recommended next learning order
 
@@ -243,10 +212,6 @@ The MLOps promotion plan is now documented above. Do not add a second large mode
 - staged deployment, monitoring, and rollback decision.
 
 That artifact strengthens the interview story without pretending that a synthetic notebook has become a clinical production system.
-
-## Fine-tuning scope interview explanation
-
-> This lab proves the local SFT foundation: curated splits, QLoRA adaptation, and held-out before/after evaluation on a narrow synthetic task. I distinguish that from embedding fine-tuning for retrieval, from managed MLOps for governed promotion, and from clinical validation, which needs approved real-world data and expert review. I do not collapse those claims into one.
 
 ## Completion checklist for the next phase
 
