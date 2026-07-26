@@ -75,6 +75,41 @@ There is no single official nine-step standard. This is a practical framework fo
 
 The first six steps create evidence for a release. Steps seven through nine govern that release after training has finished.
 
+## Inside steps 5 and 6: what one iteration does, and how a full run is monitored
+
+The table above describes step 5 ("run and record training") and step 6 ("evaluate") at the level of an MLOps checklist. This section drops one level down: what a single training iteration actually does, and what the full run looks like end to end, using this project's real configuration in `outputs/adapters/adapter_config.json`.
+
+### One iteration, mechanically
+
+Each iteration processes one training example (`batch_size: 1` in this run) through five steps:
+
+1. **Load a batch** — one nursing-note example from `data/train.jsonl`.
+2. **Forward pass** — the model (frozen base weights plus the current adapter) generates its guess at the four-section summary.
+3. **Compute loss** — the guess is compared, token by token, against the target summary. Because `mask_prompt: true`, loss is computed only on the completion tokens, not the input notes.
+4. **Backward pass** — gradients are computed only for the adapter's rank-8 `A`/`B` matrices on the last 8 of 28 layers. The frozen base weights are excluded from this step entirely; they never receive a gradient.
+5. **Optimizer step** — the adapter's weights are nudged by a small amount, sized by the learning rate (`1e-5` in this run).
+
+This same five-step loop repeats once per iteration. Nothing changes about the loop between iteration 1 and iteration 250 except the current values of the adapter weights and which example is in the batch.
+
+### What the full 250-iteration run looks like
+
+| Config value | What it controls | This run's number |
+|---|---|---|
+| `iters` | total iterations | 250 |
+| `batch_size` | examples per iteration | 1 |
+| training set size | — | 36 examples |
+| `steps_per_report` | how often training loss is printed | every 10 steps |
+| `save_every` | how often an adapter checkpoint is written | every 100 steps |
+| `steps_per_eval` | how often the validation set is scored | every 200 steps |
+
+With `batch_size: 1` and 36 training examples, one epoch (one full pass over the training set) is 36 iterations. 250 iterations therefore covers **250 ÷ 36 ≈ 6.9 epochs** — not 250 epochs. The two checkpoint files in `outputs/adapters/` (`0000100_adapters.safetensors`, `0000200_adapters.safetensors`) are not two different adapters; they are two snapshots of the same rank-8 `A`/`B` matrices at iteration 100 and iteration 200.
+
+### Picking a checkpoint: training loss is not the selection criterion
+
+Training loss measures how well the current adapter reproduces the training examples it has already seen, repeatedly. It is expected to trend down, with noise, since `batch_size: 1` means every step's gradient direction comes from a single example. A falling training loss does not by itself confirm the adapter generalizes — with only 36 examples, it is entirely possible for training loss to keep falling while held-out performance plateaus or regresses.
+
+The signal that actually matters for checkpoint selection is the held-out score in `outputs/comparison.json`, computed on `data/test.jsonl` — data the adapter never trains on — not the training loss curve. As noted earlier in this document, `compare_outputs.py` automates two of the five checks listed in `configs/evaluation.yaml` (required-section presence, absence of leaked `<think>` reasoning); the remaining three are reviewed manually on the examples shown in the README. Checkpoint selection follows that held-out signal, not training loss.
+
 ## One product, three operational lifecycles
 
 A modern AI application can change at more than one layer. MLOps, LLMOps, and AgenticOps are useful labels for governing those different layers. They overlap in practice; the important point is to know **which asset changed and which evaluation gate applies**.
