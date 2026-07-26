@@ -57,6 +57,64 @@ Client behavior
 
 The service is updated to load `v1`. The base-model files may remain cached, but the **effective model version** changes because the adapter changes the model's behavior. If `v1` fails its monitoring or human-review criteria, the service can return to `v0` or the previous approved version.
 
+## A nine-step MLOps teaching framework
+
+There is no single official nine-step standard. This is a practical framework for explaining the complete lifecycle of this fine-tuning use case from business need through operation.
+
+| Step | Question | Fine-tuning artifact or decision |
+|---:|---|---|
+| 1. Define the business task | What repeated decision or output needs improvement? | Synthetic ESKD handoff standardization; human review remains required. |
+| 2. Select the base model | What model fits capability, cost, licensing, and runtime constraints? | Small 1.7B Qwen base model for a local demonstration. |
+| 3. Prepare and version data | What examples teach the task, and which examples remain unseen? | Separate synthetic train, validation, and test splits. |
+| 4. Define the training recipe | Exactly how will the model be adapted? | QLoRA method, adapter settings, model revision, seed, and run configuration. |
+| 5. Run and record training | What happened during the training job? | Run ID, data version, configuration, metrics, adapter artifact, and logs. |
+| 6. Evaluate | Is the candidate better on held-out examples and within defined boundaries? | Before/after comparison, format checks, evidence support review, and unsafe-addition checks. |
+| 7. Register and approve | Which exact artifact is permitted for use? | `eskd-handoff:v1` links base model, adapter, evaluation record, and approval. |
+| 8. Deploy or serve | How do approved clients obtain the result? | One stable `/summarize` API loads the approved base-model-plus-adapter version. |
+| 9. Operate and improve | What is observed after release, and what triggers a new version or rollback? | Quality signals, cost/latency, human feedback, incidents, rollback, and approved new data. |
+
+The first six steps create evidence for a release. Steps seven through nine govern that release after training has finished.
+
+## One product, three operational lifecycles
+
+A modern AI application can change at more than one layer. MLOps, LLMOps, and AgenticOps are useful labels for governing those different layers. They overlap in practice; the important point is to know **which asset changed and which evaluation gate applies**.
+
+| Lifecycle | Primary changing asset | Typical examples | Primary question |
+|---|---|---|---|
+| **MLOps** | Training data, model weights, adapter, model artifact | QLoRA adapter v1 → adapter v2 | Does the changed model perform better and remain safe enough to promote? |
+| **LLMOps** | Prompt, model selection, generation settings, evaluation policy | New system prompt; model-provider change; temperature limit | Does the model call remain accurate, reliable, safe, and cost-effective? |
+| **AgenticOps** | Workflow, skills, tool permissions, routing, Markdown/YAML instructions, harness code | New agent skill; changed approval route; new tool policy | Does the workflow complete the business task with the right controls and human oversight? |
+
+```mermaid
+flowchart TB
+    A[Business workflow and user feedback] --> B{What changed or failed?}
+    B -->|Task behavior / domain format| C[MLOps\nData + adapter + model version]
+    B -->|Prompt / model call quality| D[LLMOps\nPrompt + model selection + evaluation]
+    B -->|Workflow / skill / tool behavior| E[AgenticOps\nAgent definition + harness + controls]
+    C --> F[Approved application release]
+    D --> F
+    E --> F
+    F --> G[Production signals and human feedback]
+    G --> A
+```
+
+### The flywheel is not automatically model retraining
+
+The flywheel means collecting evidence from real use, reviewing it, and improving the correct layer through an approved change process.
+
+| Signal from use | Likely improvement path |
+|---|---|
+| Summaries consistently omit a domain-specific pattern | Curate approved examples and consider a new adapter version through **MLOps**. |
+| Output is too verbose or ignores a formatting instruction | Improve the prompt or generation policy through **LLMOps**. |
+| The system calls the wrong tool or skips a required human approval | Change the workflow, skill, or policy through **AgenticOps**. |
+| New knowledge or a changing policy is missing | Update the approved knowledge source or retrieval layer; do not automatically retrain the model. |
+
+For a traditional enterprise workflow, AgenticOps and LLMOps may be the primary focus because the business process, tools, approval path, and prompts change most often. For an AI product with repeated domain behavior, MLOps becomes more central when new approved data justifies a new model or adapter version. The same product may need all three, but each change should be evaluated and promoted through the lifecycle that matches the asset being changed.
+
+## Interview explanation
+
+> I view MLOps, LLMOps, and AgenticOps as connected operational lifecycles rather than separate technologies. MLOps governs changes to data and model artifacts; LLMOps governs model calls and prompts; AgenticOps governs the workflow, skills, and tool controls. Feedback from production should be triaged to the right layer. In this lab, the central artifact is a QLoRA adapter, so the detailed lifecycle is MLOps: versioned data, training configuration, evaluation, registration, approval, serving, monitoring, and rollback.
+
 ## Fine-tuning map: current lab versus future learning
 
 | Fine-tuning style | What changes | Current status | Appropriate next step |
@@ -138,9 +196,9 @@ You should be able to distinguish it from fine-tuning:
 
 > Fine-tuning adapts an existing model to a bounded task using curated examples. Foundation-model training builds general capability from an enormous corpus. In enterprise delivery, I would typically select and govern a foundation model rather than train one from scratch.
 
-## Suggested next artifact for this repository
+## Next MLOps implementation step
 
-Do not add a second large implementation immediately. First add a concise **MLOps promotion plan** that maps this existing local experiment to a hosted lifecycle:
+The MLOps promotion plan is now documented above. Do not add a second large model experiment immediately. The next implementation step is to turn the plan into a small hosted proof of concept that records:
 
 - dataset version and approval record;
 - training configuration and base-model version;
@@ -151,13 +209,13 @@ Do not add a second large implementation immediately. First add a concise **MLOp
 
 That artifact strengthens the interview story without pretending that a synthetic notebook has become a clinical production system.
 
-## Interview explanation
+## Fine-tuning scope interview explanation
 
 > This lab proves the local SFT foundation: curated splits, QLoRA adaptation, and held-out before/after evaluation on a narrow synthetic task. I distinguish that from embedding fine-tuning for retrieval, from managed MLOps for governed promotion, and from clinical validation, which needs approved real-world data and expert review. I do not collapse those claims into one.
 
 ## Completion checklist for the next phase
 
-- [ ] Add an MLOps promotion-plan document for the existing SFT experiment
+- [x] Add an MLOps promotion plan for the existing SFT experiment
 - [ ] Define promotion gates: format, evidence support, safety, cost, latency
 - [ ] Define artifact/version metadata to retain
 - [ ] Define staged-release and rollback signals
