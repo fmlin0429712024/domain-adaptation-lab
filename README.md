@@ -202,6 +202,7 @@ README.md             project story and local-run design
 ## Next reference
 
 - [Fine-tuning MLOps and advanced scope reference](fine-tuning-advanced-reference.md) — the nine-step QLoRA promotion path, the MLOps/LLMOps/AgenticOps operating model, and the boundary between this method and other fine-tuning types.
+- [Concept review](docs/concept-review.md) — author's personal recall notes for the "why" decisions in this lab (QLoRA vs. full fine-tuning, layer/rank choices, overfitting evidence).
 
 ## What the demonstration shows — and how each check is done
 

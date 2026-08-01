@@ -7,3 +7,8 @@ evaluation:
     - missing_information_explicit
     - no_diagnosis_or_treatment_advice
     - human_review_note_present
+  # Automated subset of required_checks, enforced by scripts/promote.py before
+  # a version can become outputs/registry.json's active_version.
+  promotion_gate:
+    min_mean_required_sections_after: 3.5
+    max_outputs_with_thinking_after: 0

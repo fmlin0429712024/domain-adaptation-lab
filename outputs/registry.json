@@ -1,0 +1,66 @@
+{
+  "active_version": "v1",
+  "versions": [
+    {
+      "version": "v1",
+      "status": "approved",
+      "created_at": "2026-08-01T22:53:08.167573+00:00",
+      "adapter_path": "outputs/adapters/adapters.safetensors",
+      "adapter_sha256_16": "424e966f7b12088c",
+      "base_model": "mlx-community/Qwen3-1.7B-4bit",
+      "training_config": {
+        "experiment": {
+          "name": "eskd-note-standardizer-lora",
+          "seed": 0
+        },
+        "data": {
+          "train": "data/train.jsonl",
+          "validation": "data/valid.jsonl"
+        },
+        "adapter": {
+          "method": "QLoRA",
+          "rank": 8,
+          "scale": 20.0
+        },
+        "training": {
+          "status": "completed-initial-local-run",
+          "iterations": 250,
+          "batch_size": 1,
+          "num_layers": 8,
+          "trainable_parameters": 2490000,
+          "checkpoint_selection": "validation-review",
+          "note": "Tune run length only after the baseline and validation set are available."
+        }
+      },
+      "data_sha256_16": {
+        "train": "27ed111f320d343e",
+        "valid": "e4a54751c084448c",
+        "test": "4949b3bd8aaacf94"
+      },
+      "eval_summary": {
+        "cases": 12,
+        "mean_required_sections_before": 0.0,
+        "mean_required_sections_after": 4.0,
+        "outputs_with_thinking_before": 11,
+        "outputs_with_thinking_after": 0
+      },
+      "gate": {
+        "passed": true,
+        "checks": {
+          "min_mean_required_sections_after": true,
+          "max_outputs_with_thinking_after": true
+        }
+      },
+      "git_commit": "e01263f",
+      "notes": "Initial QLoRA run: 250 iters, rank-8 adapter on last 8/28 layers."
+    }
+  ],
+  "events": [
+    {
+      "type": "promote",
+      "version": "v1",
+      "at": "2026-08-01T22:53:08.167573+00:00",
+      "result": "approved"
+    }
+  ]
+}
