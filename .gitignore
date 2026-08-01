@@ -4,10 +4,10 @@ __pycache__/
 .env
 .env.*
 !.env.example
-data/private/
-data/raw/
+training/data/private/
+training/data/raw/
 models/
-outputs/*
-!outputs/registry.json
+training/outputs/*
+!training/outputs/registry.json
 wandb/
 mlruns/
