@@ -6,6 +6,24 @@
 > managed-platform primitive would replace which manual step in [Part 1](../training/README.md) and
 > [Part 2](README.md) — not to claim hands-on operation of that platform.
 
+## Open with this: it's CI/CD for a model instead of for code
+
+Vertex Pipelines / Kubeflow is CI/CD applied to a model artifact instead of a code artifact — same
+mechanism, different thing being tested and shipped:
+
+| CI/CD term | This project's manual, human-triggered version | What Vertex/Kubeflow automates it into |
+|---|---|---|
+| Trigger (a `git push`) | You type a command | Cloud Scheduler (time) or a Pub/Sub event (new data/run) |
+| Test suite | `compare_outputs.py` grades the held-out set | Same logic, as a pipeline component |
+| Gate (tests must pass to merge/deploy) | `promote.py`'s threshold check | A conditional (`dsl.If`) component |
+| Merge / release record | `registry.json` | Vertex AI Model Registry |
+| Deploy | Not run (Ollama not installed) | Vertex AI Endpoint |
+| Roll back a bad release | `promote.py rollback --to v1` | Endpoint points back to a prior registered version |
+
+Every step above, right now, is triggered by one person typing a command at a laptop — there is no
+scheduler, no listener, nothing running in the background. That is the entire gap this document
+maps: not new concepts, but who presses the button, and whether there's a button-presser at all.
+
 ## The core fact these two products share
 
 Vertex AI Pipelines and Kubeflow are two **runtimes for the same pipeline-definition language** —
