@@ -42,6 +42,13 @@ Say the caveat out loud, don't skip it: 36 synthetic examples proves the trainin
 and evaluation *mechanics* are sound — it is not a claim of broad real-world
 generalization.
 
+**Has the rollback path actually been tested, not just written?**
+Yes, both directions. The gate-failure path was tested first (rejecting an unreviewed rollback
+target). The success path was verified separately: promoted a second version, confirmed
+`active_version` moved to it, rolled back, confirmed it correctly returned to the prior approved
+version and logged the event — then restored the registry to its real single-version state so the
+committed file reflects actual history, not test artifacts.
+
 **Why a small local model, not a large hosted LLM?**
 Two reasons, both worth saying, not just the first one: (1) practical — this is a laptop-scale
 demo, no GPU cluster or API budget assumed. (2) architectural — that constraint mirrors a real
