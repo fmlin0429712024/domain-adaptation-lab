@@ -5,6 +5,30 @@ works, register and gate the result, serve it, and know precisely what a managed
 (Vertex AI Pipelines / Kubeflow) would automate on top of that. No client data, no proprietary
 logic, not a clinical system.
 
+## Overview
+
+**Domain adaptation for clinical documentation — fine-tuning a small model on
+nurse notes drawn from ESKD (End-Stage Kidney Disease) care, with synthetic
+data standing in for real records.**
+
+> Background: in diabetes → CKD → ESKD disease progression, nurse notes are a
+> key unstructured source for tracking clinical status, treatment adherence,
+> and complication risk. This repo is a systematic, synthetic-data validation
+> of the full lifecycle needed to turn that kind of text into a fine-tuned
+> model — training through serving through the automation a managed pipeline
+> platform would add.
+
+**Why fine-tuning instead of RAG/prompting:** nurse notes are dense but
+loosely structured — freeform phrasing, abbreviations, domain-specific
+terms — so the model needs to internalize the vocabulary and patterns
+directly rather than rely on a few examples stuffed into a prompt; that
+specialization is what fine-tuning buys over retrieval or prompt engineering
+for this kind of highly domain-specific text.
+
+**Core approach:** QLoRA fine-tune a small model, gate promotion on a
+held-out before/after comparison, then serve it locally and map every piece
+against its managed-pipeline (Vertex AI Pipelines / Kubeflow) equivalent.
+
 ```mermaid
 flowchart LR
     A[Train + evaluate<br/>Part 1] --> B[Register + gate<br/>Part 1]
