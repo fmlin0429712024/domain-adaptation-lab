@@ -42,6 +42,16 @@ Say the caveat out loud, don't skip it: 36 synthetic examples proves the trainin
 and evaluation *mechanics* are sound — it is not a claim of broad real-world
 generalization.
 
+**Why a small local model, not a large hosted LLM?**
+Two reasons, both worth saying, not just the first one: (1) practical — this is a laptop-scale
+demo, no GPU cluster or API budget assumed. (2) architectural — that constraint mirrors a real
+production pattern: for a narrow, repeated task, a small fine-tuned model is often cheaper and
+faster per call than paying per-token for a large general model at volume, so this isn't just a
+workaround, it's a legitimate choice class. The MLOps lifecycle I'm demonstrating — versioned
+data, gate, registry, rollback — is identical whether the base model is 1.7B or 70B; in a resourced
+environment I'd evaluate base-model size as a cost/latency/quality tradeoff against the specific
+task, not default to "biggest available."
+
 ## Depth control — do not volunteer unless directly pushed
 
 - Adam optimizer internals (why gradients + optimizer state cost extra memory)
