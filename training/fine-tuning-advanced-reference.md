@@ -149,7 +149,7 @@ The point is not to claim every form of fine-tuning or every production capabili
 | **Embedding fine-tuning** | Train a retriever/embedding model so relevant documents rank nearer to a query. | Not implemented; a separate problem type. | Improves retrieval quality, not response format — build a separate retrieval-focused lab, with retrieval metrics. |
 | **Continued pre-training / foundation-model training** | General model weights learn from a huge corpus, at large-scale compute. | Not implemented and out of scope. | Usually a model-provider responsibility; understand the category and vendor-selection implications. |
 | **Real clinical-data validation** | Validate a clinical use case with approved data, clinical experts, protocol, and safety monitoring. | Not implemented. | Synthetic before/after output cannot establish clinical quality, safety, or workflow effectiveness. |
-| **Hosted MLOps fine-tuning pipeline** | Reproducible cloud training, evaluation gates, registry, deployment, monitoring, and rollback. | Not implemented. | This lab runs locally with no deployment or managed-model lifecycle — see the learning order below. |
+| **Hosted MLOps fine-tuning pipeline** | Reproducible cloud training, evaluation gates, registry, deployment, monitoring, and rollback. | Lifecycle contract implemented locally (`scripts/promote.py`); the managed cloud version is not implemented, only mapped. | See [../serving/automation-pipeline.md](../serving/automation-pipeline.md) for which Vertex/Kubeflow primitive replaces each local step. |
 
 These are complementary layers, not a single maturity ladder. A strong enterprise system may use several of them, but does not need all of them.
 
@@ -157,26 +157,12 @@ These are complementary layers, not a single maturity ladder. A strong enterpris
 
 ## Recommended next learning order
 
-### 1. Hosted fine-tuning / MLOps lifecycle — learn first
+Steps 7-9 of the table above (register, deploy, operate) are implemented as a promotion gate and
+version registry in `scripts/promote.py` / `outputs/registry.json`. The managed-platform equivalent
+(Vertex AI Pipelines / Kubeflow) is mapped primitive-by-primitive in
+[../serving/automation-pipeline.md](../serving/automation-pipeline.md) — not duplicated here.
 
-This is the most directly relevant extension for a Principal AI Engineer because it connects an already-understood QLoRA experiment to enterprise operations.
-
-Understand the lifecycle before implementing a cloud version:
-
-```text
-approved dataset version
-  -> training configuration version
-  -> managed training job
-  -> evaluation on held-out set
-  -> quality / safety gate
-  -> model or adapter registry
-  -> staged deployment
-  -> monitoring, feedback, rollback
-```
-
-For Vertex AI, the equivalents are typically dataset/artifact versioning, a training job or custom job, model registry, endpoint or batch serving, monitoring, IAM, logs, and evaluation metadata. The exact managed service matters less than the lifecycle controls.
-
-### 2. Embedding fine-tuning — learn second
+### 1. Embedding fine-tuning — learn next
 
 Use this only when a retrieval problem is demonstrated:
 
@@ -190,33 +176,12 @@ question
 
 The training data is usually a set of query–relevant-document pairs, often with hard negatives. The evaluation is retrieval-oriented: Recall@k, MRR, nDCG, or task success—not merely fluent generated text.
 
-### 3. Real clinical validation — understand the boundary, do not simulate it
+### 2. Real clinical validation — understand the boundary, do not simulate it
 
 For a real healthcare implementation, the work would require approved data access, de-identification/minimum-necessary review, a clinical ground truth or review protocol, subgroup/safety analysis, human oversight, and post-deployment monitoring. This lab should continue to say: **synthetic data only; not clinical validation**.
 
-### 4. Foundation-model training — know the category, not the implementation
+### 3. Foundation-model training — know the category, not the implementation
 
 You should be able to distinguish it from fine-tuning:
 
 > Fine-tuning adapts an existing model to a bounded task using curated examples. Foundation-model training builds general capability from an enormous corpus. In enterprise delivery, I would typically select and govern a foundation model rather than train one from scratch.
-
-## Next MLOps implementation step
-
-The MLOps promotion plan is now documented above. Do not add a second large model experiment immediately. The next implementation step is to turn the plan into a small hosted proof of concept that records:
-
-- dataset version and approval record;
-- training configuration and base-model version;
-- held-out evaluation thresholds;
-- adapter/model artifact registry entry;
-- human sign-off for promotion;
-- staged deployment, monitoring, and rollback decision.
-
-That artifact strengthens the interview story without pretending that a synthetic notebook has become a clinical production system.
-
-## Completion checklist for the next phase
-
-- [x] Add an MLOps promotion plan for the existing SFT experiment
-- [ ] Define promotion gates: format, evidence support, safety, cost, latency
-- [ ] Define artifact/version metadata to retain
-- [ ] Define staged-release and rollback signals
-- [ ] Add an embedding fine-tuning concept note only after selecting a real retrieval use case
